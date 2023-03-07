@@ -1,18 +1,6 @@
 
 const { json } = require('express');
-const fs = require('fs')
-const tours=JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)) ;
-
-exports.checkId = (req, res, next, val) =>{
-    console.log(`Tour id Is : ${val}`)
-    if(req.params.id > tours.length){
-        return res.status(404).json({
-            status: "fail",
-            masseg: " not match here"
-        })
-    }
-    next();
-}
+const Tour = require('../modules/tourModule');
 
 exports.checkBody = (req, res, next)=>{
     if (! req.body.name || req.body.price){
@@ -26,72 +14,102 @@ exports.checkBody = (req, res, next)=>{
 
 // ====ROUTER=====
 
-exports.getAllTours=  (req, res)=>{
-    res.status(200).json({
-        status: 'Success',
-        data: {
-            tours: tours
-        }
-    });
-};
-
-exports.getTour = (req, res)=>{
-    console.log(req.params)
-    // if(req.params.id > tours.length){
-    //     return res.status(404).json({
-    //         status: "fail",
-    //         masseg: " not match here"
-    //     })
-    // }
-        const tour = tours.find(el => el.id===req.params.id *1);
+exports.getAllTours=  async(req, res)=>{
+    try{
+        const tours = await Tour.find();
         res.status(200).json({
             status: 'Success',
             data: {
-                tour
+                tours: tours
             }
         });
+    }catch(err){
+        res.status(400).json({
+            status: " fail"
+        })
+
+    }
    
 };
 
-exports.newTour = (req,res)=>{
-    const newId = tours[tours.length - 1].id + 1;
-   const newTour = Object.assign({id: newId}, req.body);
-    tours.push(newTour);
-    fs.writeFile(`${__dirname}/dev-data/data/tours-simple.json`, JSON.stringify(tours),
-    err =>{
+exports.getTour = async(req, res)=>{
+    const tour = await Tour.findById(req.params.id);
+        try{
+            res.status(200).json({
+                status: 'Success',
+                data: {
+                    tour
+                }
+            });
+
+        }catch(err){
+            res.status(400).json({
+                message: "invalid ID"
+            })
+        }
+        
+   
+};
+
+exports.createTour = async (req,res)=>{
+    try{
+        const newTour = await Tour.create(req.body);
+        res.status(201).json({
+           stutas: 'success',
+           data: {
+               message: newTour
+           }
+          });
+
+    }catch(err){
+        res.status(400).json({
+            status: 'fail',
+            message: "invalid data"
+        })
+    }
+   
+};
+
+exports.updateTour = async (req, res)=>{
+    try{
+        const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        })
+        res.status(200).json({
+            status: "success",
+            data: {
+                tour
+            }
+        })
+
+    }catch(err){
+        res.status(400).json({
+            status: 'fail',
+            message: "invalid data"
+        })
+
+    }
+ 
+};
+
+exports.deleteTour = async(req, res)=>{
+    try{
+        const tour = await Tour.findByIdAndDelete(req.params.id);
         res.status(201).json({
             stutas: 'success',
             data: {
-                tours: newTour
+                message: " data deleted"
             }
-        });
-    });
-};
+           });
 
-exports.updateTour = (req, res)=>{
-    // if(req.params.id > tours.length){
-    //     return res.status(404).json({
-    //         status: "fail",
-    //         masseg: " not match here"
-    //     })
-    // }
-    res.status(200).json({
-        status: "success",
-        data: {
-            tour: '<Updated tour here...>'
-        }
-    })
-};
 
-exports.deleteTour = (req, res)=>{
-    // if(req.params.id > tours.length){
-    //     return res.status(404).json({
-    //         status: "fail",
-    //         masseg: " not match here"
-    //     })
-    // }
-    res.status(204).json({
-        status: "no content",
-        data: null
-    })
+    }catch(err){
+        res.status(400).json({
+            status: 'fail',
+            message: "invalid data"
+        })
+
+    }
+   
 };
