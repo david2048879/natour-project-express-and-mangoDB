@@ -32,8 +32,7 @@ const tourschema = new mongoose.Schema({
         type:Number,
         required: [true, 'A tour must have a price']
     },
-    priceDiscount: Number,
-    Summary: {
+    summary: {
         type: String,
         trim: true,
         required: [true, `A tour must have describution`]
